@@ -285,12 +285,12 @@ lyb_read_string(char **str, struct lylyb_parse_ctx *lybctx)
     lyb_read_size(&str_len, lybctx);
 
     /* allocate mem */
-    *str = malloc((str_len + 1) * sizeof **str);
+    *str = malloc(((uint64_t)str_len + 1) * sizeof **str);
     LY_CHECK_ERR_RET(!*str, LOGMEM(lybctx->ctx), LY_EMEM);
 
     if (str_len) {
         /* read the string */
-        lyb_read(*str, str_len * 8, lybctx);
+        lyb_read(*str, (uint64_t)str_len * 8, lybctx);
     }
 
     (*str)[str_len] = '\0';
