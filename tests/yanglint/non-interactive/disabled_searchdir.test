@@ -4,7 +4,7 @@ set mdir $env(YANG_MODULES_DIR)
 
 test disable_searchdir_twice {Unsuccessfully imports module due to -D -D} {
     ly_cmd "$mdir/ietf-ip.yang"
-    ly_cmd_err "-D -D $mdir/ietf-ip.yang" "Loading \"ietf-interfaces\" module failed."
+    ly_cmd_err "-D -D $mdir/ietf-ip.yang" "Loading \"ietf-interfaces@<any>\" module failed."
 } {}
 
 cleanupTests

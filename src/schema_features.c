@@ -605,7 +605,8 @@ lys_set_features(struct lysp_module *pmod, const char **features)
         /* check that all the features exist */
         for (j = 0; features[j]; ++j) {
             if (!lysp_feature_find(pmod, features[j], strlen(features[j]), 0)) {
-                LOGERR(pmod->mod->ctx, LY_EINVAL, "Feature \"%s\" not found in module \"%s\".", features[j], pmod->mod->name);
+                LOGERR(pmod->mod->ctx, LY_EINVAL, "Feature \"%s\" not found in module \"%s@%s\".", features[j],
+                        pmod->mod->name, pmod->mod->revision ? pmod->mod->revision : "<none>");
                 return LY_EINVAL;
             }
         }

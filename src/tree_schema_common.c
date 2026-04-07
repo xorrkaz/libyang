@@ -840,7 +840,7 @@ lys_load_mod_from_clb_or_file(struct ly_ctx *ctx, const char *name, const char *
     }
 
     if (!*mod && !mod_latest) {
-        LOGVAL(ctx, NULL, LYVE_REFERENCE, "Loading \"%s\" module failed, not found.", name);
+        LOGVAL(ctx, NULL, LYVE_REFERENCE, "Loading \"%s@%s\" module failed, not found.", name, revision ? revision : "<any>");
         return LY_ENOTFOUND;
     }
 

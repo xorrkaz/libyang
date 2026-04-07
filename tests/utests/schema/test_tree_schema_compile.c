@@ -99,7 +99,7 @@ test_module(void **state)
     ly_in_free(in, 0);
     assert_int_equal(0, mod->implemented);
     assert_int_equal(LY_EINVAL, lys_set_implemented(mod, feats));
-    CHECK_LOG_CTX("Feature \"invalid\" not found in module \"test\".", NULL, 0);
+    CHECK_LOG_CTX("Feature \"invalid\" not found in module \"test@<none>\".", NULL, 0);
     assert_int_equal(LY_SUCCESS, lys_set_implemented(mod, NULL));
     assert_non_null(mod->compiled);
     assert_string_equal("test", mod->name);
