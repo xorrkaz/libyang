@@ -1997,7 +1997,7 @@ lyd_find_schema_ctx(const struct lysc_node *schema, const struct ly_ctx *trg_ctx
         }
         src_parent = sp;
 
-        if (!src_parent->parent) {
+        if (!lysc_data_parent(src_parent)) {
             /* find the module first */
             trg_mod = ly_ctx_get_module_implemented(trg_ctx, src_parent->module->name);
             if (!trg_mod) {
