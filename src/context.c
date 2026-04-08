@@ -340,7 +340,7 @@ ly_ctx_new(const char *search_dir, uint32_t options, struct ly_ctx **new_ctx)
     }
 
     /* create dummy in */
-    rc = ly_in_new_memory(sep, &in);
+    rc = ly_in_new_memory(internal_modules[0].data, &in);
     LY_CHECK_GOTO(rc, cleanup);
 
     /* load internal modules */
