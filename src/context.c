@@ -340,7 +340,7 @@ ly_ctx_new(const char *search_dir, uint32_t options, struct ly_ctx **new_ctx)
     }
 
     /* create dummy in */
-    rc = ly_in_new_memory(internal_modules[0].data, &in);
+    rc = ly_in_new_memory(sep, &in);
     LY_CHECK_GOTO(rc, cleanup);
 
     /* load internal modules */
@@ -1573,29 +1573,4 @@ ly_ctx_destroy(struct ly_ctx *ctx)
     lyplg_clean();
 
     free(ctx);
-}
-
-LIBYANG_API_DEF LY_ERR
-lys_internal_module_get_yang(const char *module_name, const char *revision, const char **data_yang)
-{
-    uint32_t i;
-
-    LY_CHECK_ARG_RET(NULL, module_name, data_yang, LY_EINVAL);
-
-    *data_yang = NULL;
-
-    for (i = 0; i < LY_INTERNAL_MODS_COUNT; ++i) {
-        if (strcmp(module_name, internal_modules[i].name)) {
-            continue;
-        }
-
-        if (revision && strcmp(revision, internal_modules[i].revision)) {
-            continue;
-        }
-
-        *data_yang = internal_modules[i].data;
-        break;
-    }
-
-    return *data_yang ? LY_SUCCESS : LY_ENOTFOUND;
 }

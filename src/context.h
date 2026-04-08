@@ -749,19 +749,6 @@ LIBYANG_API_DECL ly_bool ly_ctx_is_printed(const struct ly_ctx *ctx);
  */
 LIBYANG_API_DECL void ly_ctx_destroy(struct ly_ctx *ctx);
 
-/**
- * @brief Get YANG raw data of an internal library module.
- *
- * @param[in] module_name Module name to get.
- * @param[in] revision Optional module revision, NULL for any.
- * @param[out] data_yang Module YANG data.
- * @return LY_SUCCESS on success;
- * @return LY_ENOTFOUND if the specified module was not found;
- * @return LY_ERR on error.
- */
-LIBYANG_API_DECL LY_ERR lys_internal_module_get_yang(const char *module_name, const char *revision,
-        const char **data_yang);
-
 /** @} context */
 
 #ifdef __cplusplus
