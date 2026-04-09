@@ -1691,30 +1691,37 @@ lydjson_subtree_r(struct lyd_json_ctx *lydctx, struct lyd_node *parent, struct l
         switch (snode->nodetype) {
         case LYS_LEAFLIST:
         case LYS_LIST:
-            LY_CHECK_GOTO(status != LYJSON_ARRAY, representation_error);
+            if (status == LYJSON_ARRAY) {
+                /* process all the values/objects */
+                do {
+                    /* move into array/next value */
+                    r = lyjson_ctx_next(lydctx->jsonctx, &status);
+                    LY_CHECK_ERR_GOTO(r, rc = r, cleanup);
+                    if (status == LYJSON_ARRAY_CLOSED) {
+                        /* empty array, fine... */
+                        break;
+                    }
 
-            /* process all the values/objects */
-            do {
-                /* move into array/next value */
-                r = lyjson_ctx_next(lydctx->jsonctx, &status);
-                LY_CHECK_ERR_GOTO(r, rc = r, cleanup);
-                if (status == LYJSON_ARRAY_CLOSED) {
-                    /* empty array, fine... */
-                    break;
-                }
+                    r = lydjson_parse_instance(lydctx, parent, first_p, snode, ext, name, name_len, prefix, prefix_len,
+                            &status, &node);
+                    if (r == LY_ENOT) {
+                        goto representation_error;
+                    }
+                    LY_DPARSER_ERR_GOTO(r, rc = r, lydctx, cleanup);
 
+                    /* move after the item(s) */
+                    r = lyjson_ctx_next(lydctx->jsonctx, &status);
+                    LY_CHECK_ERR_GOTO(r, rc = r, cleanup);
+                } while (status == LYJSON_ARRAY_NEXT);
+            } else {
+                /* may still be an opaque node */
                 r = lydjson_parse_instance(lydctx, parent, first_p, snode, ext, name, name_len, prefix, prefix_len,
                         &status, &node);
                 if (r == LY_ENOT) {
                     goto representation_error;
                 }
                 LY_DPARSER_ERR_GOTO(r, rc = r, lydctx, cleanup);
-
-                /* move after the item(s) */
-                r = lyjson_ctx_next(lydctx->jsonctx, &status);
-                LY_CHECK_ERR_GOTO(r, rc = r, cleanup);
-            } while (status == LYJSON_ARRAY_NEXT);
-
+            }
             break;
         case LYS_LEAF:
         case LYS_CONTAINER:
