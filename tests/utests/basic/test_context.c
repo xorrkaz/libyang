@@ -51,17 +51,17 @@ test_searchdirs(void **state)
     /* correct path */
     assert_int_equal(LY_SUCCESS, ly_ctx_set_searchdir(UTEST_LYCTX, path1));
     assert_int_equal(2, UTEST_LYCTX->search_paths.count);
-    assert_string_equal(path1, UTEST_LYCTX->search_paths.objs[0]);
+    assert_string_equal(path1, UTEST_LYCTX->search_paths.objs[1]);
 
     /* duplicated paths */
     assert_int_equal(LY_EEXIST, ly_ctx_set_searchdir(UTEST_LYCTX, path1));
     assert_int_equal(2, UTEST_LYCTX->search_paths.count);
-    assert_string_equal(path1, UTEST_LYCTX->search_paths.objs[0]);
+    assert_string_equal(path1, UTEST_LYCTX->search_paths.objs[1]);
 
     /* another path */
     assert_int_equal(LY_SUCCESS, ly_ctx_set_searchdir(UTEST_LYCTX, path2));
     assert_int_equal(3, UTEST_LYCTX->search_paths.count);
-    assert_string_equal(path2, UTEST_LYCTX->search_paths.objs[1]);
+    assert_string_equal(path2, UTEST_LYCTX->search_paths.objs[2]);
 
     /* get searchpaths */
     list = ly_ctx_get_searchdirs(UTEST_LYCTX);
