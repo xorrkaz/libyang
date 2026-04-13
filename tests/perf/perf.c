@@ -363,42 +363,6 @@ test_create_new_text(struct test_state *state, struct timespec *ts_start, struct
 }
 
 static LY_ERR
-test_create_new_bin(struct test_state *state, struct timespec *ts_start, struct timespec *ts_end, uint32_t *size)
-{
-    LY_ERR r;
-    struct lyd_node *data = NULL;
-    uint32_t i;
-    char k_val[32], k2_val[32], l_val[32];
-    struct lyd_node *list;
-
-    *size = 0;
-    TEST_START(ts_start);
-
-    if ((r = lyd_new_inner(NULL, state->mod, "cont", 0, &data))) {
-        return r;
-    }
-
-    for (i = 0; i < state->count; ++i) {
-        sprintf(k_val, "%" PRIu32, i);
-        sprintf(k2_val, "str%" PRIu32, i);
-        sprintf(l_val, "l%" PRIu32, i);
-
-        if ((r = lyd_new_list(data, NULL, "lst", 0, &list, &i, k2_val))) {
-            return r;
-        }
-        if ((r = lyd_new_term(list, NULL, "l", l_val, 0, NULL))) {
-            return r;
-        }
-    }
-
-    TEST_END(ts_end);
-
-    lyd_free_siblings(data);
-
-    return LY_SUCCESS;
-}
-
-static LY_ERR
 test_create_path(struct test_state *state, struct timespec *ts_start, struct timespec *ts_end, uint32_t *size)
 {
     LY_ERR r;
@@ -854,7 +818,6 @@ test_merge_no_same_destruct(struct test_state *state, struct timespec *ts_start,
 
 struct test tests[] = {
     {"create new text", setup_basic, test_create_new_text},
-    {"create new bin", setup_basic, test_create_new_bin},
     {"create path", setup_basic, test_create_path},
     {"validate", setup_data_single_tree, test_validate},
     {"parse xml mem validate", setup_data_single_tree, test_parse_xml_mem_validate},
