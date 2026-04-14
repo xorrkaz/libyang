@@ -724,7 +724,6 @@ cleanup:
 static LY_ERR
 ly_pat_compile_xmlschema_chblocks_xmlschema2perl(const char *pattern, char **regex, struct ly_err_item **err)
 {
-#define URANGE_LEN 19
     char *ublock2urange[][2] = {
         {"BasicLatin", "[\\x{0000}-\\x{007F}]"},
         {"Latin-1Supplement", "[\\x{0080}-\\x{00FF}]"},
@@ -829,15 +828,6 @@ ly_pat_compile_xmlschema_chblocks_xmlschema2perl(const char *pattern, char **reg
         }
         end = (ptr - perl_regex) + 1;
 
-        /* need more space */
-        if (end - start < URANGE_LEN) {
-            perl_regex = ly_realloc(perl_regex, strlen(perl_regex) + (URANGE_LEN - (end - start)) + 1);
-            *regex = perl_regex;
-            if (!perl_regex) {
-                return ly_err_new(err, LY_EMEM, 0, NULL, NULL, LY_EMEM_MSG);
-            }
-        }
-
         /* find our range */
         for (idx = 0; ublock2urange[idx][0]; ++idx) {
             if (!strncmp(perl_regex + start + ly_strlen_const("\\p{Is"),
@@ -851,6 +841,17 @@ ly_pat_compile_xmlschema_chblocks_xmlschema2perl(const char *pattern, char **reg
         }
         ublock = idx;
 
+        /* need more space */
+        size_t urange_len = strlen(ublock2urange[ublock][1]);
+
+        if (end - start < urange_len) {
+            perl_regex = ly_realloc(perl_regex, strlen(perl_regex) + (urange_len - (end - start)) + 1);
+            *regex = perl_regex;
+            if (!perl_regex) {
+                return ly_err_new(err, LY_EMEM, 0, NULL, NULL, LY_EMEM_MSG);
+            }
+        }
+
         /* make the space in the string and replace the block (but we cannot include brackets if it was already enclosed in them) */
         for (idx2 = 0, idx = 0; idx2 < start; ++idx2) {
             if ((perl_regex[idx2] == '[') && (!idx2 || (perl_regex[idx2 - 1] != '\\'))) {
@@ -863,11 +864,11 @@ ly_pat_compile_xmlschema_chblocks_xmlschema2perl(const char *pattern, char **reg
         }
         if (idx) {
             /* skip brackets */
-            memmove(perl_regex + start + (URANGE_LEN - 2), perl_regex + end, strlen(perl_regex + end) + 1);
-            memcpy(perl_regex + start, ublock2urange[ublock][1] + 1, URANGE_LEN - 2);
+            memmove(perl_regex + start + (urange_len - 2), perl_regex + end, strlen(perl_regex + end) + 1);
+            memcpy(perl_regex + start, ublock2urange[ublock][1] + 1, urange_len - 2);
         } else {
-            memmove(perl_regex + start + URANGE_LEN, perl_regex + end, strlen(perl_regex + end) + 1);
-            memcpy(perl_regex + start, ublock2urange[ublock][1], URANGE_LEN);
+            memmove(perl_regex + start + urange_len, perl_regex + end, strlen(perl_regex + end) + 1);
+            memcpy(perl_regex + start, ublock2urange[ublock][1], urange_len);
         }
     }
 
