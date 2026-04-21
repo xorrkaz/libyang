@@ -3,7 +3,7 @@
  * @author Michal Vasko <mvasko@cesnet.cz>
  * @brief performance tests
  *
- * Copyright (c) 2021 CESNET, z.s.p.o.
+ * Copyright (c) 2021 - 2026 CESNET, z.s.p.o.
  *
  * This source code is licensed under BSD 3-Clause License (the "License").
  * You may not use this file except in compliance with the License.
@@ -834,7 +834,7 @@ struct test tests[] = {
     {"print lyb shrink", setup_data_single_tree, test_print_lyb_shrink},
     {"print lyb no shrink", setup_data_single_tree, test_print_lyb_no_shrink},
     {"dup", setup_data_single_tree, test_dup},
-    {"dup_siblings_to_empty", setup_data_empty_and_full_trees, test_dup_siblings_to_empty},
+    {"dup siblings to empty", setup_data_empty_and_full_trees, test_dup_siblings_to_empty},
     {"free", setup_basic, test_free},
     {"xpath find", setup_data_single_tree, test_xpath_find},
     {"xpath find hash", setup_data_single_tree, test_xpath_find_hash},
