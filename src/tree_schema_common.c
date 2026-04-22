@@ -2373,10 +2373,13 @@ lysc_ext_find_definition(const struct ly_ctx *ctx, const struct lysp_ext_instanc
 }
 
 LY_ERR
-lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_ext *ext_def, struct lysp_ext_instance *ext_p)
+lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_module *pmod,
+        const struct lysp_ext *ext_def, struct lysp_ext_instance *ext_p)
 {
     const char *ext, *arg, *prefix_arg, *name_arg, *prefix_ext, *name_ext;
     uint32_t prefix_arg_len, name_arg_len, prefix_ext_len, name_ext_len;
+    struct lysp_stmt *stmt = NULL;
+    char *path;
 
     if (!ext_def->argname || ext_p->argument) {
         /* nothing to do */
@@ -2385,8 +2388,6 @@ lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_e
 
     if (ext_p->format == LY_VALUE_XML) {
         /* schema was parsed from YIN and an argument is expected, ... */
-        struct lysp_stmt *stmt = NULL;
-
         if (ext_def->flags & LYS_YINELEM_TRUE) {
             /* ... argument was the first XML child element */
             for (stmt = ext_p->child; stmt && (stmt->flags & LYS_YIN_ATTR); stmt = stmt->next) {}
@@ -2396,9 +2397,15 @@ lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_e
                 arg = stmt->stmt;
                 ly_parse_nodeid(&arg, &prefix_arg, &prefix_arg_len, &name_arg, &name_arg_len);
                 if (ly_strncmp(ext_def->argname, name_arg, name_arg_len)) {
+                    LY_CHECK_RET(lysp_ext_instance_path(ctx, pmod, ext_p, &path));
+                    ly_log_location(NULL, path, NULL);
+
                     LOGVAL(ctx, NULL, LYVE_SEMANTICS, "Extension instance \"%s\" expects argument element \"%s\" as its "
                             "first XML child, but \"%.*s\" element found.", ext_p->name, ext_def->argname,
                             (int)name_arg_len, name_arg);
+
+                    ly_log_location_revert(0, 1, 0);
+                    free(path);
                     return LY_EVALID;
                 }
 
@@ -2409,8 +2416,14 @@ lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_e
 
                 if (ly_resolve_prefix(ctx, prefix_ext, prefix_ext_len, ext_p->format, ext_p->prefix_data) !=
                         ly_resolve_prefix(ctx, prefix_arg, prefix_arg_len, stmt->format, stmt->prefix_data)) {
+                    LY_CHECK_RET(lysp_ext_instance_path(ctx, pmod, ext_p, &path));
+                    ly_log_location(NULL, path, NULL);
+
                     LOGVAL(ctx, NULL, LYVE_SEMANTICS, "Extension instance \"%s\" element and its argument element \"%s\" are "
                             "expected in the same namespace, but they differ.", ext_p->name, ext_def->argname);
+
+                    ly_log_location_revert(0, 1, 0);
+                    free(path);
                     return LY_EVALID;
                 }
             }
@@ -2432,8 +2445,14 @@ lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_e
 
     if (!ext_p->argument) {
         /* missing extension's argument */
+        LY_CHECK_RET(lysp_ext_instance_path(ctx, pmod, ext_p, &path));
+        ly_log_location(NULL, path, NULL);
+
         LOGVAL(ctx, NULL, LYVE_SEMANTICS, "Extension instance \"%s\" missing argument %s\"%s\".",
                 ext_p->name, (ext_def->flags & LYS_YINELEM_TRUE) ? "element " : "", ext_def->argname);
+
+        ly_log_location_revert(0, 1, 0);
+        free(path);
         return LY_EVALID;
     }
 

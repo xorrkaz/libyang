@@ -518,13 +518,14 @@ LY_ERR lys_find_child_node(const struct ly_ctx *ctx, const struct lysc_node *par
  * (it might come from import modules which is not yet parsed at that time). Therefore, all the attributes are stored
  * as substatements and resolving argument is postponed.
  *
- * @param[in] ctx libyang context
+ * @param[in] ctx libyang context.
+ * @param[in] pmod Current module for logging.
  * @param[in] ext_def Parsed extension definition.
  * @param[in,out] ext_p Parsed extension to be updated.
  * @return LY_ERR value.
  */
-LY_ERR lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_ext *ext_def,
-        struct lysp_ext_instance *ext_p);
+LY_ERR lysp_ext_instance_resolve_argument(const struct ly_ctx *ctx, const struct lysp_module *pmod,
+        const struct lysp_ext *ext_def, struct lysp_ext_instance *ext_p);
 
 /**
  * @brief Iterate over the specified type of the extension instances

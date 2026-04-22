@@ -1619,8 +1619,7 @@ test_extension_argument_element(void **state)
     /* invalid */
     mod_test_yang = "module x { namespace \"urn:x\"; prefix x; import a { prefix a; } a:e; }";
     assert_int_equal(LY_EVALID, lys_parse_mem(UTEST_LYCTX, mod_test_yang, LYS_IN_YANG, NULL));
-    CHECK_LOG_CTX("Parsing module \"x\" failed.", NULL, 0);
-    CHECK_LOG_CTX("Extension instance \"a:e\" missing argument element \"name\".", NULL, 0);
+    CHECK_LOG_CTX("Extension instance \"a:e\" missing argument element \"name\".", "/x:{ext-inst='a:e'}", 0);
 
     mod_test_yin = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             "<module name=\"x\"\n"
@@ -1635,8 +1634,7 @@ test_extension_argument_element(void **state)
             "  <a:e/>\n"
             "</module>\n";
     assert_int_equal(LY_EVALID, lys_parse_mem(UTEST_LYCTX, mod_test_yin, LYS_IN_YIN, NULL));
-    CHECK_LOG_CTX("Parsing module \"x\" failed.", NULL, 0);
-    CHECK_LOG_CTX("Extension instance \"a:e\" missing argument element \"name\".", NULL, 0);
+    CHECK_LOG_CTX("Extension instance \"a:e\" missing argument element \"name\".", "/x:{ext-inst='a:e'}", 0);
 
     mod_test_yin = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             "<module name=\"x\"\n"
@@ -1651,8 +1649,7 @@ test_extension_argument_element(void **state)
             "  <a:e name=\"xxx\"/>\n"
             "</module>\n";
     assert_int_equal(LY_EVALID, lys_parse_mem(UTEST_LYCTX, mod_test_yin, LYS_IN_YIN, NULL));
-    CHECK_LOG_CTX("Parsing module \"x\" failed.", NULL, 0);
-    CHECK_LOG_CTX("Extension instance \"a:e\" missing argument element \"name\".", NULL, 0);
+    CHECK_LOG_CTX("Extension instance \"a:e\" missing argument element \"name\".", "/x:{ext-inst='a:e'}", 0);
 
     mod_test_yin = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             "<module name=\"x\"\n"
@@ -1669,9 +1666,8 @@ test_extension_argument_element(void **state)
             "  </a:e>\n"
             "</module>\n";
     assert_int_equal(LY_EVALID, lys_parse_mem(UTEST_LYCTX, mod_test_yin, LYS_IN_YIN, NULL));
-    CHECK_LOG_CTX("Parsing module \"x\" failed.", NULL, 0);
     CHECK_LOG_CTX("Extension instance \"a:e\" element and its argument element \"name\" are expected in the same namespace, but they differ.",
-            NULL, 0);
+            "/x:{ext-inst='a:e'}", 0);
 
     mod_test_yin = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
             "<module name=\"x\"\n"
@@ -1688,9 +1684,8 @@ test_extension_argument_element(void **state)
             "  </a:e>\n"
             "</module>\n";
     assert_int_equal(LY_EVALID, lys_parse_mem(UTEST_LYCTX, mod_test_yin, LYS_IN_YIN, NULL));
-    CHECK_LOG_CTX("Parsing module \"x\" failed.", NULL, 0);
     CHECK_LOG_CTX("Extension instance \"a:e\" expects argument element \"name\" as its first XML child, but \"value\" element found.",
-            NULL, 0);
+            "/x:{ext-inst='a:e'}", 0);
 
 }
 

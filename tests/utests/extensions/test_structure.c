@@ -167,8 +167,7 @@ test_schema_invalid(void **state)
             "import ietf-yang-structure-ext {prefix sx;}"
             "sx:structure { container x { leaf x {type string;}}}}";
     UTEST_INVALID_MODULE(data, LYS_IN_YANG, NULL, LY_EVALID);
-    CHECK_LOG_CTX("Parsing module \"a\" failed.", NULL, 0);
-    CHECK_LOG_CTX("Extension instance \"sx:structure\" missing argument element \"name\".", NULL, 0);
+    CHECK_LOG_CTX("Extension instance \"sx:structure\" missing argument element \"name\".", "/a:{ext-inst='sx:structure'}", 0);
 
     data = "module a {yang-version 1.1; namespace urn:tests:extensions:structure:a; prefix self;"
             "import ietf-yang-structure-ext {prefix sx;}"

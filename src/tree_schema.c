@@ -1891,7 +1891,7 @@ lysp_resolve_ext_instance_records(struct lysp_ctx *pctx)
             ext->plugin_ref = ext_def->plugin_ref;
 
             /* resolve the argument, if needed */
-            LY_CHECK_RET(lysp_ext_instance_resolve_argument(PARSER_CTX(pctx), ext_def, ext));
+            LY_CHECK_RET(lysp_ext_instance_resolve_argument(PARSER_CTX(pctx), PARSER_CUR_PMOD(pctx), ext_def, ext));
         }
     }
 
