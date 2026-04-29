@@ -2089,6 +2089,7 @@ lys_implement(struct lys_module *mod, const char **features, struct lys_glob_unr
 
     /* this module is compiled in this compilation */
     mod->to_compile = 1;
+    LY_CHECK_RET(ly_set_add(&unres->compiling, mod, 1, NULL));
 
     /* add the module into newly implemented module set */
     LY_CHECK_RET(ly_set_add(&unres->implementing, mod, 1, NULL));

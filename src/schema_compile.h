@@ -106,10 +106,11 @@ struct lys_depset_unres {
  */
 struct lys_glob_unres {
     struct ly_set dep_sets;     /**< set of dependency sets of modules, see ::lys_compile_depset_all() */
-    struct ly_set implementing; /**< set of YANG schemas being atomically implemented (compiled); the first added
-                                    module is always the explicitly implemented module, the other ones are dependencies */
+    struct ly_set implementing; /**< set of YANG schemas being atomically implemented; the first added
+                                     module is always the explicitly implemented module, the other ones are dependencies */
+    struct ly_set compiling;    /**< set of YANG schemas being compiled */
     struct ly_set creating;     /**< set of YANG schemas being atomically created (parsed); it is a subset of implemented
-                                    and all these modules are freed if any error occurs */
+                                     and all these modules are freed if any error occurs */
     struct lys_depset_unres ds_unres;   /**< unres specific for the current dependency set */
 };
 
