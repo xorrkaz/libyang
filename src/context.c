@@ -1014,6 +1014,7 @@ static const struct lysp_submodule *
 _ly_ctx_get_submodule2(const struct lys_module *module, const char *submodule, const char *revision, ly_bool latest)
 {
     struct lysp_include *inc;
+    const char *last_revision;
     LY_ARRAY_COUNT_TYPE u;
 
     LY_CHECK_ARG_RET(NULL, module, module->parsed, submodule, NULL);
@@ -1021,14 +1022,15 @@ _ly_ctx_get_submodule2(const struct lys_module *module, const char *submodule, c
     LY_ARRAY_FOR(module->parsed->includes, u) {
         if (module->parsed->includes[u].submodule && !strcmp(submodule, module->parsed->includes[u].submodule->name)) {
             inc = &module->parsed->includes[u];
+            last_revision = lysp_last_revision(NULL, inc->submodule->revs);
 
             if (latest && inc->submodule->latest_revision) {
                 /* latest revision */
                 return inc->submodule;
-            } else if (!revision && !inc->submodule->revs) {
+            } else if (!revision && !last_revision) {
                 /* no revision */
                 return inc->submodule;
-            } else if (revision && inc->submodule->revs && !strcmp(revision, inc->submodule->revs[0].date)) {
+            } else if (revision && last_revision && !strcmp(revision, last_revision)) {
                 /* specific revision */
                 return inc->submodule;
             }

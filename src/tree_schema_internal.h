@@ -222,6 +222,15 @@ LY_ERR lysp_check_identifierchar(struct lysp_ctx *ctx, uint32_t c, ly_bool first
 LY_ERR lysp_check_prefix(struct lysp_ctx *ctx, struct lysp_import *imports, const char *module_prefix, const char **value);
 
 /**
+ * @brief Find the last revision. Alos, check the revisions are ordered and unique and print warnings if not.
+ *
+ * @param[in] pmod Optional (sub)module to use for logging. If not set, nothing is logged.
+ * @param[in] revs Sized-array of the revisions.
+ * @return Last revision date, if any.
+ */
+const char *lysp_last_revision(const struct lysp_module *pmod, const struct lysp_revision *revs);
+
+/**
  * @brief Find type specified type definition.
  *
  * @param[in] id Name of the type including possible prefix. Module where the prefix is being searched is start_module.
@@ -284,18 +293,11 @@ LY_ERR lysp_check_dup_identities(struct lysp_ctx *ctx, struct lysp_module *mod);
 LY_ERR lys_check_date(const struct ly_ctx *ctx, const char *date, uint32_t date_len, const char *stmt);
 
 /**
- * @brief Just move the newest revision into the first position, does not sort the rest
- * @param[in] revs Sized-array of the revisions in a printable schema tree.
- */
-void lysp_sort_revisions(struct lysp_revision *revs);
-
-/**
  * @brief Validate enum name.
  *
  * @param[in] ctx yang parser context for logging.
  * @param[in] name String to check.
  * @param[in] name_len Length of name.
- *
  * @return LY_ERR values
  */
 LY_ERR lysp_check_enum_name(struct lysp_ctx *ctx, const char *name, size_t name_len);

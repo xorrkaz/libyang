@@ -375,7 +375,7 @@ test_get_models(void **state)
     struct lys_module *mod, *mod2;
     const char *str0 = "module a {namespace urn:a;prefix a;}";
     const char *str1 = "module a {namespace urn:a;prefix a;revision 2018-10-23;}";
-    const char *str2 = "module a {namespace urn:a;prefix a;revision 2018-10-23;revision 2018-10-24;}";
+    const char *str2 = "module a {namespace urn:a;prefix a;revision 2018-10-24;revision 2018-10-23;}";
     struct ly_in *in0, *in1, *in2;
     struct lys_glob_unres unres = {0};
 

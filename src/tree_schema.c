@@ -2016,12 +2016,11 @@ static LY_ERR
 lysp_load_module_data_check(const struct ly_ctx *ctx, struct lysp_module *mod, struct lysp_submodule *submod,
         const struct lysp_load_module_data *mod_data)
 {
-    const char *name;
+    const char *name, *last_revision;
     uint8_t latest_revision;
-    struct lysp_revision *revs;
 
     name = mod ? mod->mod->name : submod->name;
-    revs = mod ? mod->revs : submod->revs;
+    last_revision = mod ? lysp_last_revision(NULL, mod->revs) : lysp_last_revision(NULL, submod->revs);
     latest_revision = mod ? mod->mod->latest_revision : submod->latest_revision;
 
     if (mod_data->name) {
@@ -2034,9 +2033,9 @@ lysp_load_module_data_check(const struct ly_ctx *ctx, struct lysp_module *mod, s
 
     if (mod_data->revision) {
         /* check revision of the parsed module */
-        if (!revs || strcmp(mod_data->revision, revs[0].date)) {
+        if (!last_revision || strcmp(mod_data->revision, last_revision)) {
             LOGERR(ctx, LY_EINVAL, "Module \"%s\" parsed with the wrong revision (\"%s\" instead \"%s\").", name,
-                    revs ? revs[0].date : "none", mod_data->revision);
+                    last_revision ? last_revision : "none", mod_data->revision);
             return LY_EINVAL;
         }
     } else if (!latest_revision) {
@@ -2061,7 +2060,7 @@ lysp_load_module_data_check(const struct ly_ctx *ctx, struct lysp_module *mod, s
     }
 
     if (mod_data->path) {
-        ly_check_module_filename(ctx, name, revs ? revs[0].date : NULL, mod_data->path);
+        ly_check_module_filename(ctx, name, last_revision, mod_data->path);
     }
 
     return LY_SUCCESS;
@@ -2077,6 +2076,7 @@ lys_parse_submodule(struct ly_ctx *ctx, struct ly_in *in, LYS_INFORMAT format, s
     struct lysp_yang_ctx *yangctx = NULL;
     struct lysp_yin_ctx *yinctx = NULL;
     struct lysp_ctx *pctx = NULL;
+    const char *last_revision, *last_revision2;
 
     LY_CHECK_ARG_RET(ctx, ctx, in, LY_EINVAL);
 
@@ -2099,18 +2099,19 @@ lys_parse_submodule(struct ly_ctx *ctx, struct ly_in *in, LYS_INFORMAT format, s
     LY_CHECK_GOTO(rc, cleanup);
     assert(submod);
 
-    /* make sure that the newest revision is at position 0 */
-    lysp_sort_revisions(submod->revs);
+    /* check the revisions are ordered */
+    last_revision = lysp_last_revision((struct lysp_module *)submod, submod->revs);
 
     /* decide the latest revision */
     latest_sp = (struct lysp_submodule *)ly_ctx_get_submodule2_latest(submod->mod, submod->name);
     if (latest_sp) {
-        if (submod->revs) {
-            if (!latest_sp->revs) {
+        if (last_revision) {
+            last_revision2 = lysp_last_revision(NULL, latest_sp->revs);
+            if (!last_revision2) {
                 /* latest has no revision, so mod is anyway newer */
                 submod->latest_revision = latest_sp->latest_revision;
                 /* the latest_sp is zeroed later when the new module is being inserted into the context */
-            } else if (strcmp(submod->revs[0].date, latest_sp->revs[0].date) > 0) {
+            } else if (strcmp(last_revision, last_revision2) > 0) {
                 submod->latest_revision = latest_sp->latest_revision;
                 /* the latest_sp is zeroed later when the new module is being inserted into the context */
             } else {
@@ -2610,14 +2611,16 @@ lys_compile_submodules(struct lys_module *mod)
     LY_ARRAY_COUNT_TYPE u;
     const struct lysp_submodule *submodp;
     struct lysc_submodule *submod;
+    const char *last_revision;
 
     LY_ARRAY_FOR(mod->parsed->includes, u) {
         submodp = mod->parsed->includes[u].submodule;
 
         LY_ARRAY_NEW_GOTO(mod->ctx, mod->submodules, submod, rc, cleanup);
         DUP_STRING_GOTO(mod->ctx, submodp->name, submod->name, rc, cleanup);
-        if (submodp->revs) {
-            LY_CHECK_GOTO(rc = lysdict_insert(mod->ctx, submodp->revs[0].date, 0, &submod->revision), cleanup);
+        last_revision = lysp_last_revision(NULL, submodp->revs);
+        if (last_revision) {
+            LY_CHECK_GOTO(rc = lysdict_insert(mod->ctx, last_revision, 0, &submod->revision), cleanup);
         }
         DUP_STRING_GOTO(mod->ctx, submodp->filepath, submod->filepath, rc, cleanup);
     }
@@ -2636,6 +2639,7 @@ lys_parse_in(struct ly_ctx *ctx, struct ly_in *in, LYS_INFORMAT format, const st
     struct lysp_yin_ctx *yinctx = NULL;
     struct lysp_ctx *pctx = NULL;
     ly_bool mod_created = 0, mod_exists = 0;
+    const char *last_revision;
 
     assert(ctx && in && new_mods);
 
@@ -2664,10 +2668,10 @@ lys_parse_in(struct ly_ctx *ctx, struct ly_in *in, LYS_INFORMAT format, const st
     }
     LY_CHECK_GOTO(rc, cleanup);
 
-    /* make sure that the newest revision is at position 0 */
-    lysp_sort_revisions(mod->parsed->revs);
-    if (mod->parsed->revs) {
-        LY_CHECK_GOTO(rc = lysdict_insert(ctx, mod->parsed->revs[0].date, 0, &mod->revision), cleanup);
+    /* check the revisions are ordered */
+    last_revision = lysp_last_revision(mod->parsed, mod->parsed->revs);
+    if (last_revision) {
+        LY_CHECK_GOTO(rc = lysdict_insert(ctx, last_revision, 0, &mod->revision), cleanup);
     }
 
     /* set YANG version */
@@ -2734,7 +2738,7 @@ lys_parse_in(struct ly_ctx *ctx, struct ly_in *in, LYS_INFORMAT format, const st
 
     switch (in->type) {
     case LY_IN_FILEPATH:
-        ly_check_module_filename(ctx, mod->name, mod->parsed->revs ? mod->parsed->revs[0].date : NULL, in->method.fpath.filepath);
+        ly_check_module_filename(ctx, mod->name, lysp_last_revision(NULL, mod->parsed->revs), in->method.fpath.filepath);
         break;
     case LY_IN_FD:
     case LY_IN_FILE:

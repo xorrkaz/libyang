@@ -271,28 +271,6 @@ test_date(void **state)
 }
 
 static void
-test_revisions(void **UNUSED(state))
-{
-    struct lysp_revision *revs = NULL, *rev;
-
-    /* revisions are stored in wrong order - the newest is the last */
-    LY_ARRAY_NEW_RET(NULL, revs, rev, );
-    strcpy(rev->date, "2018-01-01");
-    LY_ARRAY_NEW_RET(NULL, revs, rev, );
-    strcpy(rev->date, "2018-12-31");
-
-    assert_int_equal(2, LY_ARRAY_COUNT(revs));
-    assert_string_equal("2018-01-01", revs[0].date);
-    assert_string_equal("2018-12-31", revs[1].date);
-    /* the order should be fixed, so the newest revision will be the first in the array */
-    lysp_sort_revisions(revs);
-    assert_string_equal("2018-12-31", revs[0].date);
-    assert_string_equal("2018-01-01", revs[1].date);
-
-    LY_ARRAY_FREE(revs);
-}
-
-static void
 test_collision_typedef(void **state)
 {
     const char *str;
@@ -2323,7 +2301,6 @@ main(void)
     const struct CMUnitTest tests[] = {
         UTEST(test_getnext),
         UTEST(test_date),
-        UTEST(test_revisions),
         UTEST(test_collision_typedef),
         UTEST(test_collision_grouping),
         UTEST(test_collision_identity),

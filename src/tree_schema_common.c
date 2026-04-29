@@ -61,24 +61,49 @@ lysp_check_prefix(struct lysp_ctx *ctx, struct lysp_import *imports, const char 
     return LY_SUCCESS;
 }
 
-void
-lysp_sort_revisions(struct lysp_revision *revs)
+const char *
+lysp_last_revision(const struct lysp_module *pmod, const struct lysp_revision *revs)
 {
-    LY_ARRAY_COUNT_TYPE i, r;
-    struct lysp_revision rev;
+    LY_ARRAY_COUNT_TYPE u;
+    int cmp;
+    const char *last_revision = NULL, *name, *mod_str;
+    const struct ly_ctx *ctx = NULL;
 
-    for (i = 1, r = 0; i < LY_ARRAY_COUNT(revs); i++) {
-        if (strcmp(revs[i].date, revs[r].date) > 0) {
-            r = i;
+    if (!revs) {
+        return NULL;
+    }
+
+    /* prepare logging */
+    if (pmod) {
+        ctx = pmod->mod->ctx;
+        if (pmod->is_submod) {
+            name = ((struct lysp_submodule *)pmod)->name;
+            mod_str = "module";
+        } else {
+            name = pmod->mod->name;
+            mod_str = "submodule";
         }
     }
 
-    if (r) {
-        /* the newest revision is not on position 0, switch them */
-        memcpy(&rev, &revs[0], sizeof rev);
-        memcpy(&revs[0], &revs[r], sizeof rev);
-        memcpy(&revs[r], &rev, sizeof rev);
+    last_revision = revs[0].date;
+
+    for (u = 0; u < LY_ARRAY_COUNT(revs) - 1; ++u) {
+        cmp = strcmp(revs[u].date, revs[u + 1].date);
+        if (cmp < 0) {
+            if (ctx) {
+                LOGWRN(ctx, "Older revision %s found after a newer revision %s in %s \"%s\".", revs[u].date,
+                        revs[u + 1].date, mod_str, name);
+            }
+
+            if (strcmp(revs[u + 1].date, last_revision) > 0) {
+                last_revision = revs[u + 1].date;
+            }
+        } else if (ctx && (cmp == 0)) {
+            LOGWRN(ctx, "Duplicate revision %s in %s \"%s\".", revs[u].date, mod_str, name);
+        }
     }
+
+    return last_revision;
 }
 
 LY_ERR
@@ -1063,6 +1088,7 @@ lysp_parsed_mods_get_submodule(struct lysp_ctx *pctx, struct lysp_include *inc)
 {
     uint32_t i;
     struct lysp_submodule *submod;
+    const char *last_revision;
 
     for (i = 0; i < pctx->parsed_mods->count - 1; ++i) {
         submod = pctx->parsed_mods->objs[i];
@@ -1074,12 +1100,15 @@ lysp_parsed_mods_get_submodule(struct lysp_ctx *pctx, struct lysp_include *inc)
             continue;
         }
 
-        if (inc->rev[0] && submod->revs && strncmp(inc->rev, submod->revs[0].date, LY_REV_SIZE)) {
-            LOGVAL_PARSER(pctx, LYVE_REFERENCE,
-                    "Submodule %s includes different revision (%s) of the submodule %s:%s included by the main module %s.",
-                    ((struct lysp_submodule *)PARSER_CUR_PMOD(pctx))->name, inc->rev,
-                    submod->name, submod->revs[0].date, PARSER_CUR_PMOD(pctx)->mod->name);
-            return LY_EVALID;
+        if (inc->rev[0]) {
+            last_revision = lysp_last_revision(NULL, submod->revs);
+            if (last_revision && strncmp(inc->rev, last_revision, LY_REV_SIZE)) {
+                LOGVAL_PARSER(pctx, LYVE_REFERENCE,
+                        "Submodule %s includes different revision (%s) of the submodule %s:%s included by the main module %s.",
+                        ((struct lysp_submodule *)PARSER_CUR_PMOD(pctx))->name, inc->rev,
+                        submod->name, last_revision, PARSER_CUR_PMOD(pctx)->mod->name);
+                return LY_EVALID;
+            }
         }
 
         inc->submodule = submod;
@@ -1654,6 +1683,16 @@ lysc_node_actions_p(struct lysc_node *node)
     default:
         return NULL;
     }
+}
+
+LIBYANG_API_DEF const char *
+lysp_submodule_revision(const struct lysp_submodule *submod)
+{
+    if (!submod) {
+        return NULL;
+    }
+
+    return lysp_last_revision(NULL, submod->revs);
 }
 
 LIBYANG_API_DEF const struct lysc_node_action *

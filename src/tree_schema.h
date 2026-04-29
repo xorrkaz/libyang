@@ -1094,8 +1094,7 @@ typedef enum LYS_VERSION {
 struct lysp_module {
     struct lys_module *mod;          /**< covering module structure */
 
-    struct lysp_revision *revs;      /**< list of the module revisions ([sized array](@ref sizedarrays)), the first revision
-                                          in the list is always the last (newest) revision of the module */
+    struct lysp_revision *revs;      /**< list of the module revisions ([sized array](@ref sizedarrays)) */
     struct lysp_import *imports;     /**< list of imported modules ([sized array](@ref sizedarrays)) */
     struct lysp_include *includes;   /**< list of included submodules ([sized array](@ref sizedarrays)) */
     struct lysp_ext *extensions;     /**< list of extension statements ([sized array](@ref sizedarrays)) */
@@ -1118,8 +1117,8 @@ struct lysp_module {
 struct lysp_submodule {
     struct lys_module *mod;          /**< belongs to parent module (submodule - mandatory) */
 
-    struct lysp_revision *revs;      /**< list of the module revisions ([sized array](@ref sizedarrays)), the first revision
-                                          in the list is always the last (newest) revision of the module */
+    struct lysp_revision *revs;      /**< list of the module revisions ([sized array](@ref sizedarrays)),
+                                          use ::lysp_submodule_revision() to get the latest one */
     struct lysp_import *imports;     /**< list of imported modules ([sized array](@ref sizedarrays)) */
     struct lysp_include *includes;   /**< list of included submodules ([sized array](@ref sizedarrays)) */
     struct lysp_ext *extensions;     /**< list of extension statements ([sized array](@ref sizedarrays)) */
@@ -1886,6 +1885,15 @@ LIBYANG_API_DECL const struct lysp_node_notif *lysp_node_notifs(const struct lys
  * @return The node's children linked list if any, NULL otherwise.
  */
 LIBYANG_API_DECL const struct lysp_node *lysp_node_child(const struct lysp_node *node);
+
+/**
+ * @brief Get the last revision of a submodule.
+ *
+ * @param[in] submod Submodule to use.
+ * @return Last revision of @p submod;
+ * @return NULL if @p submod has no revisions.
+ */
+LIBYANG_API_DECL const char *lysp_submodule_revision(const struct lysp_submodule *submod);
 
 /**
  * @brief Get the actions/RPCs linked list of the given (compiled) schema node.
