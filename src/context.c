@@ -242,7 +242,7 @@ ly_ctx_load_module(struct ly_ctx *ctx, const char *name, const char *revision, c
 
     if (!(ctx->opts & LY_CTX_EXPLICIT_COMPILE)) {
         /* create dep set for the module and mark all the modules that will be (re)compiled */
-        LY_CHECK_GOTO(ret = lys_unres_dep_sets_create(ctx, &ctx->unres.dep_sets, &ctx->unres.creating), cleanup);
+        LY_CHECK_GOTO(ret = lys_unres_dep_sets_create(ctx, &ctx->unres.dep_sets, &ctx->unres.compiling), cleanup);
 
         /* (re)compile the whole dep set (other dep sets will have no modules marked for compilation) */
         LY_CHECK_GOTO(ret = lys_compile_depset_all(ctx, &ctx->unres), cleanup);

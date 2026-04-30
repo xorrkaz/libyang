@@ -2866,7 +2866,7 @@ lys_parse(struct ly_ctx *ctx, struct ly_in *in, LYS_INFORMAT format, const char 
 
     if (!(ctx->opts & LY_CTX_EXPLICIT_COMPILE)) {
         /* create dep set for the module and mark all the modules that will be (re)compiled */
-        LY_CHECK_GOTO(ret = lys_unres_dep_sets_create(ctx, &ctx->unres.dep_sets, &ctx->unres.implementing), cleanup);
+        LY_CHECK_GOTO(ret = lys_unres_dep_sets_create(ctx, &ctx->unres.dep_sets, &ctx->unres.compiling), cleanup);
 
         /* (re)compile the whole dep set (other dep sets will have no modules marked for compilation) */
         LY_CHECK_GOTO(ret = lys_compile_depset_all(ctx, &ctx->unres), cleanup);
