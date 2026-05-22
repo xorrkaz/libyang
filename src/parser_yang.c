@@ -1244,8 +1244,16 @@ parse_include(struct lysp_yang_ctx *ctx, const char *module_name, struct lysp_in
     size_t word_len;
     enum ly_stmt kw;
     struct lysp_include *inc;
+    LY_ARRAY_COUNT_TYPE u, v;
 
     LY_ARRAY_NEW_RET(PARSER_CTX(ctx), *includes, inc, LY_EMEM);
+
+    /* revalidate the backward parent pointers from extensions */
+    LY_ARRAY_FOR(*includes, u) {
+        LY_ARRAY_FOR((*includes)[u].exts, v) {
+            (*includes)[u].exts[v].parent = &(*includes)[u];
+        }
+    }
 
     /* get value */
     LY_CHECK_RET(get_argument(ctx, Y_IDENTIF_ARG, NULL, &word, &buf, &word_len));
@@ -1302,8 +1310,16 @@ parse_import(struct lysp_yang_ctx *ctx, const char *module_prefix, struct lysp_i
     size_t word_len;
     enum ly_stmt kw;
     struct lysp_import *imp;
+    LY_ARRAY_COUNT_TYPE u, v;
 
     LY_ARRAY_NEW_RET(PARSER_CTX(ctx), *imports, imp, LY_EVALID);
+
+    /* revalidate the backward parent pointers from extensions */
+    LY_ARRAY_FOR(*imports, u) {
+        LY_ARRAY_FOR((*imports)[u].exts, v) {
+            (*imports)[u].exts[v].parent = &(*imports)[u];
+        }
+    }
 
     /* get value */
     LY_CHECK_RET(get_argument(ctx, Y_IDENTIF_ARG, NULL, &word, &buf, &word_len));
