@@ -39,7 +39,7 @@ test ext_data_schema_mount_xml_yanglibfile {Validating and printing mounted data
     ly_cmd "searchpath $mdir"
     ly_cmd "load modsm"
     ly_cmd "extdata $ddir/modsm_ctx_ext.xml"
-    ly_cmd "data -f xml -t config $ddir/modsm2.xml" "</lfl>.*</alf>"
+    ly_cmd "data -f xml -t config $ddir/modsm2.xml" "</alf>.*</lfl>"
 }}
 
 cleanupTests

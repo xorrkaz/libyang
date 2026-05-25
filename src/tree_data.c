@@ -509,7 +509,7 @@ lyd_insert_get_next_anchor(const struct lyd_node *first_sibling, const struct ly
 
     assert(new_node);
 
-    if (!first_sibling || !new_node->schema || (LYD_CTX(first_sibling) != LYD_CTX(new_node))) {
+    if (!first_sibling || !new_node->schema) {
         /* insert at the end, no next anchor */
         return NULL;
     }
@@ -519,7 +519,7 @@ lyd_insert_get_next_anchor(const struct lyd_node *first_sibling, const struct ly
         getnext_opts = LYS_GETNEXT_OUTPUT;
     }
 
-    if (first_sibling->parent && first_sibling->parent->schema &&
+    if ((LYD_CTX(first_sibling) == LYD_CTX(new_node)) && first_sibling->parent && first_sibling->parent->schema &&
             ((struct lyd_node_inner *)first_sibling->parent)->children_ht) {
         /* find the anchor using hashes */
         sparent = first_sibling->parent->schema;

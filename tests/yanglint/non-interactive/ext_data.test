@@ -10,7 +10,7 @@ test ext_data_schema_mount_xml {Validating and printing mounted data} {
 test ext_data_schema_mount_xml_yanglibfile {Validating and printing mounted data with --yang-library-file} {
     set yanglibfile "$ddir/modsm_ctx_main.xml"
     set extdata "$ddir/modsm_ctx_ext.xml"
-    set out1 "</lfl>.*</alf>"
+    set out1 "</alf>.*</lfl>"
     ly_cmd "-f xml -t config -p $mdir -Y $yanglibfile -x $extdata $mdir/modsm.yang $ddir/modsm2.xml" $out1
 } {}
 
