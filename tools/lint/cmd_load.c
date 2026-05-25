@@ -129,7 +129,7 @@ cmd_load_exec(struct ly_ctx **ctx, struct yl_opt *yo, const char *posv)
     }
 
     /* get revision */
-    revision = strchr(posv, '@');
+    revision = (char *)strchr(posv, '@');
     if (revision) {
         revision[0] = '\0';
         ++revision;

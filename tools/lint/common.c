@@ -111,7 +111,7 @@ get_input(const char *filepath, LYS_INFORMAT *format_schema, LYD_FORMAT *format_
 static LYS_INFORMAT
 get_schema_format(const char *filename)
 {
-    char *ptr;
+    const char *ptr;
 
     if ((ptr = strrchr(filename, '.')) != NULL) {
         ++ptr;
@@ -136,7 +136,7 @@ get_schema_format(const char *filename)
 static LYD_FORMAT
 get_data_format(const char *filename)
 {
-    char *ptr;
+    const char *ptr;
 
     if ((ptr = strrchr(filename, '.')) != NULL) {
         ++ptr;
