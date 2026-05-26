@@ -161,6 +161,11 @@ test_top_level(void **state)
     assert_int_equal(lyd_new_term(NULL, mod, "foo", "25", LYD_NEW_VAL_CANON | LYD_NEW_VAL_STORE_ONLY, &node), LY_EINVAL);
     CHECK_LOG_CTX("Invalid argument !(store_only && (format == LY_VALUE_CANON)) (_lyd_new_term()).", NULL, 0);
 
+    uint16_t foo_val = 15;
+
+    assert_int_equal(lyd_new_term_raw(NULL, mod, "foo", &foo_val, sizeof foo_val, LYD_NEW_ANY_USE_VALUE, &node), LY_SUCCESS);
+    lyd_free_tree(node);
+
     /* leaf-list */
     assert_int_equal(lyd_new_term(NULL, mod, "ll", "ahoy", 0, &node), LY_SUCCESS);
     lyd_free_tree(node);

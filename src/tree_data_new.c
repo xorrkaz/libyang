@@ -742,6 +742,98 @@ lyd_new_term(struct lyd_node *parent, const struct lys_module *module, const cha
 }
 
 LIBYANG_API_DEF LY_ERR
+lyd_new_term_raw(struct lyd_node *parent, const struct lys_module *module, const char *name, const void *value_ptr,
+        uint32_t value_size, uint32_t options, struct lyd_node **node)
+{
+    LY_ERR r;
+    struct lyd_node_term *term = NULL;
+    const struct lysc_node *schema = NULL;
+    struct lysc_ext_instance *ext = NULL;
+    struct lyd_value val = {0};
+    const struct lysc_type *type;
+    struct lyplg_type *type_plg;
+    struct ly_err_item *err = NULL;
+    const struct ly_ctx *ctx = parent ? LYD_CTX(parent) : (module ? module->ctx : NULL);
+    uint32_t getnext_opts = (options & LYD_NEW_VAL_OUTPUT) ? LYS_GETNEXT_OUTPUT : 0;
+
+    LY_CHECK_ARG_RET(ctx, parent || module, parent || node, name, LY_EINVAL);
+    LY_CHECK_CTX_EQUAL_RET(__func__, parent ? LYD_CTX(parent) : NULL, module ? module->ctx : NULL, LY_EINVAL);
+
+    if (!module) {
+        module = parent->schema->module;
+    }
+
+    r = lys_find_child_node(ctx, parent ? parent->schema : NULL, module, module->name, strlen(module->name),
+            LY_VALUE_JSON, NULL, name, 0, getnext_opts, &schema, &ext);
+    if (!r && !(schema->nodetype & LYD_NODE_TERM)) {
+        r = LY_ENOT;
+    }
+    LY_CHECK_ERR_RET(r, LOGERR(ctx, LY_EINVAL, "Term node \"%s\" not found.", name), LY_ENOTFOUND);
+
+    /* get the type and the plugin */
+    type = ((struct lysc_node_leaf *)schema)->type;
+    type_plg = LYSC_GET_TYPE_PLG(type->plugin_ref);
+    assert(type_plg && type_plg->duplicate);
+
+    /* create term */
+    term = calloc(1, sizeof *term);
+    LY_CHECK_ERR_RET(!term, LOGMEM(ctx), LY_EMEM);
+
+    term->schema = schema;
+    term->prev = &term->node;
+    term->flags = LYD_NEW;
+
+    /* store the value, leave _canonical unset */
+    term->value.realtype = (type->basetype == LY_TYPE_LEAFREF) ? ((struct lysc_type_leafref *)type)->realtype : type;
+    if (options & LYD_NEW_ANY_USE_VALUE) {
+        /* spend the value */
+        if (value_size > LYD_VALUE_FIXED_MEM_SIZE) {
+            term->value.dyn_mem = malloc(value_size);
+            LY_CHECK_ERR_RET(!term->value.dyn_mem, LOGMEM(ctx), LY_EMEM);
+            memcpy(term->value.dyn_mem, value_ptr, value_size);
+        } else {
+            memcpy(term->value.fixed_mem, value_ptr, value_size);
+        }
+    } else {
+        /* store a copy of the value */
+        val.dyn_mem = (void *)value_ptr;
+        r = type_plg->duplicate(ctx, &val, &term->value);
+        LY_CHECK_ERR_RET(r, free(term), r);
+    }
+
+    if (!(options & LYD_NEW_VAL_STORE_ONLY) && type_plg->validate_value) {
+        /* validate */
+        r = type_plg->validate_value(ctx, type, &term->value, &err);
+        if (r) {
+            if (err) {
+                ly_err_print(ctx, err, parent, schema);
+                ly_err_free(err);
+            } else {
+                LOG_LOCSET(schema);
+                LOGVAL(ctx, parent, LYVE_OTHER, "Raw value of \"%s\" invalid.", schema->name);
+                LOG_LOCBACK(1);
+            }
+            lyd_free_tree(&term->node);
+            return r;
+        }
+    }
+
+    lyd_hash(&term->node);
+
+    if (ext) {
+        term->flags |= LYD_EXT;
+    }
+    if (parent) {
+        lyd_insert_node(parent, NULL, &term->node, LYD_INSERT_NODE_DEFAULT);
+    }
+
+    if (node) {
+        *node = &term->node;
+    }
+    return LY_SUCCESS;
+}
+
+LIBYANG_API_DEF LY_ERR
 lyd_new_any(struct lyd_node *parent, const struct lys_module *module, const char *name, const struct lyd_node *child,
         const char *value, uint32_t hints, uint32_t options, struct lyd_node **node)
 {

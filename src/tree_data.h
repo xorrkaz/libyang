@@ -1362,6 +1362,30 @@ LIBYANG_API_DECL LY_ERR lyd_new_term(struct lyd_node *parent, const struct lys_m
         const char *value, uint32_t options, struct lyd_node **node);
 
 /**
+ * @brief Create a new term node in the data tree and set its value directly in its internal raw representation.
+ *
+ * This function skips value parsing from its string representation but should be used only by advanced users.
+ * Providing incorrect @p value_ptr will likely result in an undefined behavior. For example, if the node being
+ * created is a `uint32` YANG type, @p value_ptr must be a pointer to `uint32_t` and @p value_size `sizeof(uint32_t)`.
+ * Or, if the node is a `inet:ipv4-address`, @p value_ptr is a pointer to ::lyd_value_ipv4_address variable and
+ * @p value_size is `sizeof(struct lyd_value_ipv4_address)`.
+ *
+ * To spend @p value_ptr, @p options may include ::LYD_NEW_ANY_USE_VALUE. Presence of this option makes no difference
+ * for values without nested pointers (but may somewhat improve the performance).
+ *
+ * @param[in] parent Parent node for the node being created. NULL in case of creating a top level element.
+ * @param[in] module Module of the node being created. If NULL, @p parent module will be used.
+ * @param[in] name Schema node name of the new data node. The node can be #LYS_LEAF or #LYS_LEAFLIST.
+ * @param[in] value_ptr Pointer to the raw value of the node, specific ::lyd_value union member for the node type expected.
+ * @param[in] value_size Size of @p value_ptr target in bytes.
+ * @param[in] options Bitmask of options, see @ref newvaloptions.
+ * @param[out] node Optional created node.
+ * @return LY_ERR value.
+ */
+LIBYANG_API_DECL LY_ERR lyd_new_term_raw(struct lyd_node *parent, const struct lys_module *module, const char *name,
+        const void *value_ptr, uint32_t value_size, uint32_t options, struct lyd_node **node);
+
+/**
  * @brief Create a new any node in the data tree.
  *
  * @param[in] parent Parent node for the node being created. NULL in case of creating a top level element.
