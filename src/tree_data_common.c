@@ -1480,6 +1480,9 @@ ly_time_tz_offset_at(time_t time)
     struct tm tm_local, tm_utc;
     int result = 0;
 
+    /* update timezone */
+    tzset();
+
     /* get local and UTC time */
     localtime_r(&time, &tm_local);
     gmtime_r(&time, &tm_utc);
@@ -1626,6 +1629,9 @@ ly_time_time2str(time_t time, const char *fractions_s, char **str)
     int zonediff_s, zonediff_h, zonediff_m;
 
     LY_CHECK_ARG_RET(NULL, str, LY_EINVAL);
+
+    /* update timezone */
+    tzset();
 
     /* convert */
     if (!localtime_r(&time, &tm)) {
