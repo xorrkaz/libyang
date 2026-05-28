@@ -509,7 +509,7 @@ lyd_insert_get_next_anchor(const struct lyd_node *first_sibling, const struct ly
 
     assert(new_node);
 
-    if (!first_sibling || !new_node->schema) {
+    if (!first_sibling || !new_node->schema || (new_node->flags & LYD_EXT)) {
         /* insert at the end, no next anchor */
         return NULL;
     }
