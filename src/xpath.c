@@ -7405,11 +7405,23 @@ moveto_num_cmp(const struct lyxp_set *set1, const struct lyxp_set *set2, int *cm
     assert(set2->type == LYXP_SET_NUMBER);
 
     /* compare doubles using strings to avoid precision issues */
-    r = asprintf(&str1, "%Lf", set1->val.num);
-    LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
-    r = asprintf(&str2, "%Lf", set2->val.num);
-    LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
+    if (set1->val.num > set2->val.num) {
+        /* print the bigger number first */
+        r = asprintf(&str1, "%Lf", set1->val.num);
+        LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
 
+        /* print the smaller number with the same count of numbers */
+        r = asprintf(&str2, "%0*Lf", r, set2->val.num);
+        LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
+    } else {
+        r = asprintf(&str2, "%Lf", set2->val.num);
+        LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
+
+        r = asprintf(&str1, "%0*Lf", r, set1->val.num);
+        LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
+    }
+
+    /* compare */
     *cmp = strcmp(str1, str2);
 
 cleanup:

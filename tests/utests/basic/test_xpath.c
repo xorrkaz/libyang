@@ -1289,6 +1289,32 @@ test_anydata(void **state)
     lyd_free_siblings(tree);
 }
 
+static void
+test_number(void **state)
+{
+    const char *data = "<foo4 xmlns=\"urn:tests:a\">250.5</foo4>";
+    struct lyd_node *tree;
+    ly_bool r;
+
+    /* we need some data */
+    assert_int_equal(LY_SUCCESS, lyd_parse_data_mem(UTEST_LYCTX, data, LYD_XML, LYD_PARSE_STRICT, LYD_VALIDATE_PRESENT, &tree));
+    assert_non_null(tree);
+
+    assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "25.2 > 1.0", &r));
+    assert_int_equal(r, 1);
+
+    assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "25.200 = 25.2", &r));
+    assert_int_equal(r, 1);
+
+    assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "75 < 100", &r));
+    assert_int_equal(r, 1);
+
+    assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "2 <= 20", &r));
+    assert_int_equal(r, 1);
+
+    lyd_free_siblings(tree);
+}
+
 int
 main(void)
 {
@@ -1308,6 +1334,7 @@ main(void)
         UTEST(test_trim, setup),
         UTEST(test_mod, setup),
         UTEST(test_anydata, setup),
+        UTEST(test_number, setup),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
