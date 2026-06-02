@@ -1300,6 +1300,7 @@ test_number(void **state)
     assert_int_equal(LY_SUCCESS, lyd_parse_data_mem(UTEST_LYCTX, data, LYD_XML, LYD_PARSE_STRICT, LYD_VALIDATE_PRESENT, &tree));
     assert_non_null(tree);
 
+    /* positive */
     assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "25.2 > 1.0", &r));
     assert_int_equal(r, 1);
 
@@ -1310,6 +1311,17 @@ test_number(void **state)
     assert_int_equal(r, 1);
 
     assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "2 <= 20", &r));
+    assert_int_equal(r, 1);
+
+    /* negative */
+    assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "-25.2 < -1.0", &r));
+    assert_int_equal(r, 1);
+
+    assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "-75 > -100", &r));
+    assert_int_equal(r, 1);
+
+    /* zero */
+    assert_int_equal(LY_SUCCESS, lyd_eval_xpath(tree, "-0 = 0", &r));
     assert_int_equal(r, 1);
 
     lyd_free_siblings(tree);

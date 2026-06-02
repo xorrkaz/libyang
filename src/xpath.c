@@ -7399,30 +7399,58 @@ moveto_num_cmp(const struct lyxp_set *set1, const struct lyxp_set *set2, int *cm
 {
     LY_ERR rc = LY_SUCCESS;
     char *str1 = NULL, *str2 = NULL;
+    long double num1, num2;
     int r;
+    ly_bool neg = 0;
 
     assert(set1->type == LYXP_SET_NUMBER);
     assert(set2->type == LYXP_SET_NUMBER);
 
+    /* avoid issues with -0 */
+    num1 = (set1->val.num == 0) ? 0 : set1->val.num;
+    num2 = (set2->val.num == 0) ? 0 : set2->val.num;
+
+    if (num1 < 0) {
+        if (num2 > 0) {
+            /* negative compared to positive */
+            *cmp = -1;
+            goto cleanup;
+        } else if (num2 < 0) {
+            /* both negative */
+            neg = 1;
+            num1 *= -1;
+            num2 *= -1;
+        }
+    } else if (num1 > 0) {
+        if (num2 < 0) {
+            /* positive compared to negative */
+            *cmp = 1;
+            goto cleanup;
+        }
+    }
+
     /* compare doubles using strings to avoid precision issues */
-    if (set1->val.num > set2->val.num) {
+    if (num1 > num2) {
         /* print the bigger number first */
-        r = asprintf(&str1, "%Lf", set1->val.num);
+        r = asprintf(&str1, "%Lf", num1);
         LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
 
         /* print the smaller number with the same count of numbers */
-        r = asprintf(&str2, "%0*Lf", r, set2->val.num);
+        r = asprintf(&str2, "%0*Lf", r, num2);
         LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
     } else {
-        r = asprintf(&str2, "%Lf", set2->val.num);
+        r = asprintf(&str2, "%Lf", num2);
         LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
 
-        r = asprintf(&str1, "%0*Lf", r, set1->val.num);
+        r = asprintf(&str1, "%0*Lf", r, num1);
         LY_CHECK_ERR_GOTO(r == -1, LOGMEM(set1->ctx); rc = LY_EMEM, cleanup);
     }
 
     /* compare */
     *cmp = strcmp(str1, str2);
+    if (neg) {
+        *cmp *= -1;
+    }
 
 cleanup:
     free(str1);
