@@ -391,6 +391,59 @@ lyd_validate_autodel_node_del(struct lyd_node **first, struct lyd_node *del, con
 }
 
 /**
+ * @brief Handle a node whose "when" evaluated to false during multi-error validation.
+ *
+ * The node is kept in the tree (so validation can continue) and marked ::LYD_WHEN_FALSE so
+ * that XPath evaluation treats it as non-existent (returns LY_ENOT) instead of LY_EINCOMPLETE.
+ * Its descendants are removed from @p node_types and @p node_when so their leafrefs and own
+ * "when" conditions are not validated against the logically non-existent subtree, which would
+ * produce spurious cascading errors.
+ *
+ * @param[in] node Node with a false "when".
+ * @param[in,out] node_when Set with nodes with "when" conditions, descendants of @p node are removed.
+ * @param[in,out] node_types Set with nodes with unresolved types, descendants of @p node are removed.
+ * @param[in,out] idx Index of @p node in @p node_when, refreshed if any descendants were removed.
+ */
+static void
+lyd_validate_when_false(struct lyd_node *node, struct ly_set *node_when, struct ly_set *node_types, uint32_t *idx)
+{
+    struct lyd_node *iter;
+    uint32_t j, count;
+
+    /* mark so subsequent XPath evaluations on this node return "no match" instead of LY_EINCOMPLETE */
+    node->flags |= LYD_WHEN_FALSE;
+
+    /* remove descendants from node_types so their leafrefs are not validated against the
+     * when-false subtree (mirrors the cleanup done by lyd_validate_autodel_node_del) */
+    if (node_types && node_types->count) {
+        LYD_TREE_DFS_BEGIN(node, iter) {
+            if ((iter->schema->nodetype & LYD_NODE_TERM) &&
+                    LYSC_GET_TYPE_PLG(((struct lysc_node_leaf *)iter->schema)->type->plugin_ref)->validate_tree &&
+                    ly_set_contains(node_types, iter, &j)) {
+                ly_set_rm_index(node_types, j, NULL);
+            }
+            LYD_TREE_DFS_END(node, iter);
+        }
+    }
+
+    /* remove descendants from node_when so their own "when" conditions are not evaluated; a
+     * when-false subtree is logically non-existent, so child whens are moot */
+    if (node_when->count > 1) {
+        count = node_when->count;
+        LYD_TREE_DFS_BEGIN(node, iter) {
+            if ((iter != node) && ly_set_contains(node_when, iter, &j)) {
+                ly_set_rm_index_ordered(node_when, j, NULL);
+            }
+            LYD_TREE_DFS_END(node, iter);
+        }
+        if (count > node_when->count) {
+            /* descendants were removed, refresh the iteration index */
+            ly_set_contains(node_when, node, idx);
+        }
+    }
+}
+
+/**
  * @brief Evaluate when conditions of collected unres nodes.
  *
  * @param[in,out] tree Data tree, is updated if some nodes are autodeleted.
@@ -439,14 +492,25 @@ lyd_validate_unres_when(struct lyd_node **tree, const struct lys_module *mod, st
                 } else if (val_opts & LYD_VALIDATE_OPERATIONAL) {
                     /* only a warning */
                     LOGWRN(LYD_CTX(node), "When condition \"%s\" not satisfied.", disabled->cond->expr);
+                } else if (val_opts & LYD_VALIDATE_MULTI_ERROR) {
+                    /* invalid data; for multi-error validation keep the node in the tree marked
+                     * as when-false so XPath treats it as non-existent and validation can continue
+                     * without spurious cascading errors */
+                    lyd_validate_when_false(node, node_when, node_types, &i);
+                    LOGVAL(LYD_CTX(node), node, LY_VCODE_NOWHEN, disabled->cond->expr);
+                    r = LY_EVALID;
+                    LY_VAL_ERR_GOTO(r, rc = r, val_opts, cleanup);
                 } else {
-                    /* invalid data */
+                    /* invalid data; single-error validation stops at this first error, so the
+                     * when-false marking and descendant cleanup would be needless work */
                     LOGVAL(LYD_CTX(node), node, LY_VCODE_NOWHEN, disabled->cond->expr);
                     r = LY_EVALID;
                     LY_VAL_ERR_GOTO(r, rc = r, val_opts, cleanup);
                 }
             } else {
-                /* when true */
+                /* when true; clear any stale when-false mark from a previous validation run
+                 * so XPath no longer treats the node as non-existent */
+                node->flags &= ~LYD_WHEN_FALSE;
                 node->flags |= LYD_WHEN_TRUE;
             }
 
@@ -1778,6 +1842,13 @@ lyd_validate_final_r(struct lyd_node *first, const struct lyd_node *parent, cons
             goto next_iter;
         }
 
+        /* skip further validation for when-false nodes: the node is logically non-existent,
+         * so its own must constraints and obsolete checks must not run */
+        if (node->flags & LYD_WHEN_FALSE) {
+            r = LY_SUCCESS;
+            goto next_iter;
+        }
+
         /* obsolete data */
         lyd_validate_obsolete(node);
 
@@ -1807,13 +1878,17 @@ next_iter:
             break;
         }
 
-        /* validate all children recursively */
-        r = lyd_validate_final_r(lyd_child(node), node, node->schema, NULL, ext, val_opts,
-                int_opts & ~LYD_INTOPT_SKIP_SIBLINGS, must_xp_opts, getnext_ht);
-        LY_VAL_ERR_GOTO(r, rc = r, val_opts, cleanup);
+        /* skip when-false nodes: they are logically non-existent, so neither their children
+         * nor their container-default handling must run */
+        if (!(node->flags & LYD_WHEN_FALSE)) {
+            /* validate all children recursively */
+            r = lyd_validate_final_r(lyd_child(node), node, node->schema, NULL, ext, val_opts,
+                    int_opts & ~LYD_INTOPT_SKIP_SIBLINGS, must_xp_opts, getnext_ht);
+            LY_VAL_ERR_GOTO(r, rc = r, val_opts, cleanup);
 
-        /* set default for containers */
-        lyd_np_cont_dflt_set(node);
+            /* set default for containers */
+            lyd_np_cont_dflt_set(node);
+        }
 
         if (int_opts & LYD_INTOPT_SKIP_SIBLINGS) {
             break;
