@@ -255,7 +255,7 @@ rb_compare_lists(const struct lyd_node *n1, const struct lyd_node *n2)
     /* continue with the next keys */
     k1 = k1->next;
     k2 = k2->next;
-    while (k1 && k1->schema && (k1->schema->flags & LYS_KEY)) {
+    while (k1 && k1->schema && (k1->schema->flags & LYS_KEY) && k2 && k2->schema && (k2->schema->flags & LYS_KEY)) {
         assert(k1->schema == k2->schema);
         val1 = &((struct lyd_node_term *)k1)->value;
         val2 = &((struct lyd_node_term *)k2)->value;
