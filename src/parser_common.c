@@ -3547,7 +3547,8 @@ lysp_stmt_parse(struct lysp_ctx *pctx, const struct lysp_stmt *stmt, void **resu
 }
 
 LY_ERR
-lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *substmt, struct lysp_stmt *stmt)
+lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *substmt, struct lysp_stmt *stmt,
+        struct lysp_ext_instance **exts)
 {
     LY_ERR rc = LY_SUCCESS;
 
@@ -3576,7 +3577,7 @@ lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *sub
         struct lysp_node **pnodes_p, *pnode = NULL;
 
         /* parse the node */
-        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, (void **)&pnode, NULL), cleanup);
+        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, (void **)&pnode, exts), cleanup);
 
         /* usually is a linked-list of all the parsed schema nodes */
         pnodes_p = (struct lysp_node **)substmt->storage_p;
@@ -3607,7 +3608,7 @@ lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *sub
     case LY_STMT_TYPEDEF:
     case LY_STMT_UNIQUE:
         /* parse, sized array */
-        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, NULL), cleanup);
+        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, exts), cleanup);
         break;
 
     case LY_STMT_ARGUMENT:
@@ -3649,7 +3650,7 @@ lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *sub
         }
 
         /* parse */
-        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, NULL), cleanup);
+        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, exts), cleanup);
         break;
 
     case LY_STMT_CONFIG:
@@ -3661,7 +3662,7 @@ lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *sub
         }
 
         /* parse */
-        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, NULL), cleanup);
+        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, exts), cleanup);
         break;
 
     case LY_STMT_ORDERED_BY:
@@ -3673,7 +3674,7 @@ lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *sub
         }
 
         /* parse */
-        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, NULL), cleanup);
+        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, exts), cleanup);
         break;
 
     case LY_STMT_STATUS:
@@ -3685,7 +3686,7 @@ lys_parser_ext_instance_stmt(struct lysp_ctx *pctx, struct lysp_ext_substmt *sub
         }
 
         /* parse */
-        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, NULL), cleanup);
+        LY_CHECK_GOTO(rc = lysp_stmt_parse(pctx, stmt, substmt->storage_p, exts), cleanup);
         break;
 
     default:
