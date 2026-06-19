@@ -2401,7 +2401,6 @@ lysp_stmt_refine(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] typedefs Typedefs to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -2468,7 +2467,6 @@ lysp_stmt_typedef(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lys
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] inout_p Input/output pointer to write to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -2546,7 +2544,6 @@ lysp_stmt_inout(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp_
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] actions Actions to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -2622,7 +2619,6 @@ lysp_stmt_action(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] notifs Notifications to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -2708,7 +2704,6 @@ lysp_stmt_notif(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp_
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] groupings Groupings to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -2795,7 +2790,6 @@ lysp_stmt_grouping(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct ly
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] augments Augments to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -2885,7 +2879,6 @@ lysp_stmt_augment(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lys
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] siblings Siblings to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -2947,7 +2940,6 @@ lysp_stmt_uses(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp_n
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] siblings Siblings to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -3026,7 +3018,6 @@ lysp_stmt_case(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp_n
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] siblings Siblings to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -3115,7 +3106,6 @@ lysp_stmt_choice(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp
  * @param[in] stmt Source statement data from the parsed extension instance.
  * @param[in] parent Parent node to connect to (not into).
  * @param[in,out] siblings Siblings to add to.
- *
  * @return LY_ERR values.
  */
 static LY_ERR
@@ -3332,8 +3322,9 @@ lysp_stmt_list(struct lysp_ctx *ctx, const struct lysp_stmt *stmt, struct lysp_n
  *
  * @param[in] pctx Parse context of the @p stmt being processed.
  * @param[in] stmt Generic statement structure to process.
- * @param[out] result Specific parsed-schema structure for the given statement. For the specific type for the particular statement, check the function code.
- * @param[in,out] exts [sized array](@ref sizedarrays) For extension instances in case of statements that do not store extension instances in their own list.
+ * @param[out] result Specific parsed-schema structure for the given statement. For the specific type for the particular
+ * statement, check the function code.
+ * @param[in,out] exts Extension instances to add to.
  * @return LY_ERR value.
  */
 static LY_ERR
